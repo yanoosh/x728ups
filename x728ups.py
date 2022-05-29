@@ -86,8 +86,8 @@ import multiprocessing
 import argparse
 import logging
 
+from configuration import *
 import mqtt
-import configuration
 
 
 logger = logging.getLogger(__name__)
