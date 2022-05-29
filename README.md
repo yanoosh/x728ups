@@ -26,8 +26,10 @@ Rough guide:
  * Clone this repository in, say, `/home/pi/x728ups`.
  * Copy the `x728ups.service` file into `/etc/systemd/system` or use `systemctl link` to use it in-situ.
  * Modify the path in `/etc/systemd/system/x728ups.service` if you cloned elsewhere.
- * I like to use Python virtualenvs so I created one in the clone directory with `python -m venv venv` - you'll 
-   note that the systemd unit uses this virtualenv directly.
+ * I like to use Python virtualenvs so I created one in the clone directory with `python -m venv venv` - you'll note that the systemd unit uses this virtualenv directly.
+ * Setup virtual env `source venv/bin/activate` for bash or `source venv/bin/activate.fish` for fish
+ * Install dependenicis `pip install -r requirements.txt`
+ * Copy secret file `configurationExample.py` na rename to `configuration.py`
 
 You can customise the shutdown duration after power-loss detection and minimum battery voltage thresholds by editing
 the `x728ups.py` script directly.
