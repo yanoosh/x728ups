@@ -298,7 +298,12 @@ def main():
     p1.start()
     p2.start()
 
-    mqtt_client = mqtt.init(MQTT_SERVER_ADDRESS, MQTT_SERVER_PORT)
+    mqtt_client = mqtt.init(
+        MQTT_SERVER_ADDRESS, 
+        MQTT_SERVER_PORT,
+        MQTT_SERVER_USER,
+        MQTT_SERVER_PASSWORD
+    )
 
     count = 0
     while True:

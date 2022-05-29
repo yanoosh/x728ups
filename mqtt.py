@@ -47,10 +47,11 @@ def on_disconnect(client, userdata, rc):
     logger.info("MQTT disconnected")
 
 
-def init(server_address, server_port):
+def init(server_address, server_port, user, password):
     client = mqtt.Client("mqtt" + str(datetime.now()))
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
+    client.username_pw_set(user, password)
     logger.debug("Attempting MQTT connect")
     try:
         client.connect(server_address, port=server_port, keepalive=60)

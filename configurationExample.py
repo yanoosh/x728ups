@@ -1,6 +1,8 @@
 # MQTT
 MQTT_SERVER_ADDRESS = "localhost"
 MQTT_SERVER_PORT = 1883
+MQTT_SERVER_USER = "user"
+MQTT_SERVER_PASSWORD = "password"
 MQTT_ROOT = "ups"
 
 # Shut down the pi if any of these thresholds are met
