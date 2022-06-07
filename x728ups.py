@@ -138,26 +138,6 @@ def detect_pld() -> bool:
     return bool(GPIO.input(GPIO_X728_PLD))
 
 
-def request_shutdown():
-    """
-    Request system shutdown of both the X728 and Raspberry Pi
-
-    Holding GPIO 13 high for 1500ms to no longer than 6400ms will put the UPS into
-    a mode where it expects to see GPIO 12 go low within ~50 seconds. At that point
-    it will shut off the power to the RPi after ~5300ms.
-
-    When the RPi shuts down and the kernel is put into power-off mode, GPIO 12 will be set low.
-
-    Therefore the UPS will power off the Raspberry Pi after shutdown has completed.
-    """
-    logger.info("Request shutdown")
-    GPIO.output(GPIO_X728_SYSTEM, 1)
-    time.sleep(SYSTEM_SHUTDOWN_REQUEST_DURATION)
-    GPIO.output(GPIO_X728_SYSTEM, 0)
-    while True:
-        pass
-
-
 def log_data(log_queue, voltage, capacity):
     logger.info(f"Voltage {voltage:0.2f}V, capacity {capacity:0.1f}%")
     log_queue.put((f"{MQTT_ROOT}/voltage", voltage))
@@ -189,6 +169,17 @@ def do_reboot():
 
 
 def monitor_shutdown(log_queue):
+    """
+    Request system shutdown of both the X728 and Raspberry Pi
+
+    Holding GPIO 13 high for 1500ms to no longer than 6400ms will put the UPS into
+    a mode where it expects to see GPIO 12 go low within ~50 seconds. At that point
+    it will shut off the power to the RPi after ~5300ms.
+
+    When the RPi shuts down and the kernel is put into power-off mode, GPIO 12 will be set low.
+
+    Therefore the UPS will power off the Raspberry Pi after shutdown has completed.
+    """
     logger.info("monitor_shutdown started")
 
     while True:
@@ -225,18 +216,22 @@ def check_power(log_queue, pld, ups_pld, wait_start):
     return wait_start
 
 
-def check_conditions(log_queue, ups_pld, wait_start, voltage, capacity):
+def check_conditions(log_queue, ups_pld, wait_start, voltage, capacity, shutdown_count):
+    if not ups_pld:
+        shutdown_count = 0
+        return
+
     if ups_pld and (time.time() - wait_start > SHUTDOWN_SECONDS):
         log_event(log_queue, f"Power loss detected for at least {SHUTDOWN_SECONDS} seconds - request shutdown now")
-        request_shutdown()
+        shutdown_count += 1
 
-    if voltage < SHUTDOWN_BATTERY_VOLTAGE:
+    if ups_pld and voltage < SHUTDOWN_BATTERY_VOLTAGE:
         log_event(log_queue, f"Voltage {voltage:0.2f}V below threshold {SHUTDOWN_BATTERY_VOLTAGE:0.2f}V - request shutdown now")
-        request_shutdown()
+        shutdown_count += 1
 
-    if capacity < SHUTDOWN_BATTERY_CAPACITY:
+    if ups_pld and capacity < SHUTDOWN_BATTERY_CAPACITY:
         log_event(log_queue, f"Capacity {capacity:0.1f}% below threshold {SHUTDOWN_BATTERY_CAPACITY:0.1f}% - request shutdown now")
-        request_shutdown()
+        shutdown_count += 1
 
 
 def monitor_pld(log_queue, bus):
@@ -245,6 +240,7 @@ def monitor_pld(log_queue, bus):
     last_ups_detected = False
     last_pld = False
     wait_start = sys.float_info.max
+    shutdown_count = 0
 
     count = 0
     while True:
@@ -264,12 +260,15 @@ def monitor_pld(log_queue, bus):
             #logger.debug(f"Voltage: {voltage:0.2f}V")
             #logger.debug(f"Capacity: {capacity:0.1f}%")
 
-            check_conditions(log_queue, last_pld, wait_start, voltage, capacity)
+            check_conditions(log_queue, last_pld, wait_start, voltage, capacity, shutdown_count)
 
-            if count % DATA_SEND_PERIOD == 0:
+            if count % DATA_SEND_PERIOD == 0 or shutdown_count > SHUTDOWN_COUNT_LIMIT:
                 log_data(log_queue, voltage, capacity)
-            count += 1
 
+            if shutdown_count > SHUTDOWN_COUNT_LIMIT:
+                do_shutdown()
+
+            count += 1
         else:
             if last_ups_detected:
                 log_event(log_queue, "UPS not detected")

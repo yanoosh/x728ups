@@ -6,9 +6,9 @@ MQTT_SERVER_PASSWORD = "password"
 MQTT_ROOT = "ups"
 
 # Shut down the pi if any of these thresholds are met
-SHUTDOWN_BATTERY_CAPACITY = 50  # capacity falls below this percentage
+SHUTDOWN_BATTERY_CAPACITY = 20  # capacity falls below this percentage
 SHUTDOWN_BATTERY_VOLTAGE = 3.6  # voltage falls below this value
-SHUTDOWN_SECONDS = 20  # power-fail for longer than this duration
+SHUTDOWN_SECONDS = 3600  # power-fail for longer than this duration
 
 # x728 I2C bus info
 I2C_BUS_ID = 1
