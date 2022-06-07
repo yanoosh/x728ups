@@ -21,8 +21,12 @@ your Raspberry Pi, your UPS or anything else related to your situation._
 
 Rough guide:
 
- * Install the original x728 script from https://github.com/geekworm-com/x728
- * Disable the auto-start of `/etc/x728pwr.sh` in `/etc/rc.local` - you won't be using this.
+ * Install 
+
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get -y install i2c-tools python3-smbus python3-venv
+
  * Clone this repository in, say, `/home/pi/x728ups`.
  * Copy the `x728ups.service` file into `/etc/systemd/system` or use `systemctl link` to use it in-situ.
  * Modify the path in `/etc/systemd/system/x728ups.service` if you cloned elsewhere.
@@ -32,7 +36,7 @@ Rough guide:
  * Copy secret file `configurationExample.py` na rename to `configuration.py`
 
 You can customise the shutdown duration after power-loss detection and minimum battery voltage thresholds by editing
-the `x728ups.py` script directly.
+the `configuration.py`.
 
 This service also supports publishing voltage/capacity updates and event descriptions to a nearby MQTT server. If you have
 one you can modify the script to make use of it. It publishes to the `ups/event`, `ups/voltage` and `ups/capacity` topics.
