@@ -138,10 +138,14 @@ def detect_pld() -> bool:
     return bool(GPIO.input(GPIO_X728_PLD))
 
 
-def log_data(log_queue, voltage, capacity):
+def log_data(log_queue, voltage, capacity, pld):
     logger.info(f"Voltage {voltage:0.2f}V, capacity {capacity:0.1f}%")
     log_queue.put((f"{MQTT_ROOT}/voltage", voltage))
     log_queue.put((f"{MQTT_ROOT}/capacity", capacity))
+    log_queue.put((
+        f"{MQTT_ROOT}/status",
+        '{"voltage":%0.2f,"capacity":%0.1f,"pld":%s}' % (voltage, capacity, "true" if pld else "false")
+    ))
 
 
 def log_event(log_queue, reason):
@@ -263,7 +267,7 @@ def monitor_pld(log_queue, bus):
             check_conditions(log_queue, last_pld, wait_start, voltage, capacity, shutdown_count)
 
             if count % DATA_SEND_PERIOD == 0 or shutdown_count > SHUTDOWN_COUNT_LIMIT:
-                log_data(log_queue, voltage, capacity)
+                log_data(log_queue, voltage, capacity, pld)
 
             if shutdown_count > SHUTDOWN_COUNT_LIMIT:
                 do_shutdown()
